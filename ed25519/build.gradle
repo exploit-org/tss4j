@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'java-library'
 }
 
 group = 'org.exploit.threshield'
@@ -22,9 +21,36 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'net.java.dev.jna:jna:5.17.0'
+    implementation project(":")
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
-    api 'org.exploit:zktrust:0.0.7'
+}
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'org.exploit.threshield'
+            artifactId = 'ed25519'
+            version = '0.0.1'
+
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            url 'http://maven.hub/'
+            credentials {
+                username mavenUsername
+                password mavenPassword
+            }
+
+            allowInsecureProtocol = true
+        }
+    }
 }
 
 jar {
@@ -33,6 +59,10 @@ jar {
     from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
+}
+
+tasks.named("jar") {
+    dependsOn(":jar")
 }
 
 test {

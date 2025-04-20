@@ -1,2 +1,5 @@
 rootProject.name = 'Threshield'
+include 'frost'
+include 'gg20'
+include 'ed25519'
 
