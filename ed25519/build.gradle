@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit.threshield'
-version = '0.0.1'
+version = '0.0.5'
 
 repositories {
     mavenCentral()
@@ -21,8 +21,10 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation project(':')
+
     implementation 'net.java.dev.jna:jna:5.17.0'
-    implementation project(":")
+    compileOnly project(":")
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 }
@@ -34,7 +36,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.threshield'
             artifactId = 'ed25519'
-            version = '0.0.1'
+            version = '0.0.5'
 
             from components.java
         }
