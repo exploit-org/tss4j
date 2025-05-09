@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit.threshield'
-version = '0.0.5'
+version = '0.0.6'
 
 repositories {
     mavenCentral()
@@ -36,7 +36,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.threshield'
             artifactId = 'ed25519'
-            version = '0.0.5'
+            version = '0.0.6'
 
             from components.java
         }

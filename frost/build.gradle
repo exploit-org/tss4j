@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit.threshield'
-version = '0.0.5'
+version = '0.0.6'
 
 repositories {
     mavenCentral()
@@ -27,6 +27,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
     compileOnly project(":")
+    implementation 'com.google.guava:guava:33.4.8-jre'
 }
 
 apply plugin: 'maven-publish'
@@ -36,7 +37,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.threshield'
             artifactId = 'frost'
-            version = '0.0.5'
+            version = '0.0.6'
 
             from components.java
         }
@@ -52,6 +53,14 @@ publishing {
 
             allowInsecureProtocol = true
         }
+    }
+}
+
+jar {
+    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+
+    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
 }
 
