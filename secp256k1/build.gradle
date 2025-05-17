@@ -34,7 +34,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             groupId = 'org.exploit.threshield'
-            artifactId = 'core'
+            artifactId = 'secp256k1'
             version = '0.0.7'
 
             from components.java
