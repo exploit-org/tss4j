@@ -2,4 +2,8 @@ rootProject.name = 'Threshield'
 include 'frost'
 include 'gg20'
 include 'ed25519'
+include 'memory'
+include 'sodium'
+include 'bigint'
+include 'secp256k1'
 

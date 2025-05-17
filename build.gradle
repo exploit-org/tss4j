@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.exploit.threshield'
-version = '0.0.6'
+version = '0.0.7'
 
 repositories {
     mavenCentral()
@@ -22,9 +22,17 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation project(':ed25519')
+    testCompileOnly 'org.projectlombok:lombok:1.18.38'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
+
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
-    api 'org.exploit:zktrust:0.0.9'
+
+    api 'org.exploit:crypto:0.0.9'
+    api 'org.owasp.netryx:memory:1.0.0'
+    api project(':sodium')
+    api project(':bigint')
 }
 
 jar {
@@ -42,7 +50,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.threshield'
             artifactId = 'core'
-            version = '0.0.6'
+            version = '0.0.7'
 
             from components.java
         }

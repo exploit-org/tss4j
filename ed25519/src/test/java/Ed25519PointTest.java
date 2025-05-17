@@ -1,27 +1,33 @@
 import com.sun.jna.NativeLibrary;
+import org.exploit.gmp.BigInt;
 import org.exploit.threshield.ed25519.Ed25519CurveParams;
 import org.exploit.threshield.ed25519.Ed25519PointOps;
-import org.exploit.threshield.ed25519.jna.Sodium;
+import org.exploit.threshield.sodium.Sodium;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class Ed25519PointTest {
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final Ed25519CurveParams CURVE = new Ed25519CurveParams();
-    private static final BigInteger ORDER = CURVE.getCurveOrder();
-    private static final byte[] IDENTITY_ENCODED = new byte[Sodium.crypto_core_ed25519_BYTES];
+    private final SecureRandom RANDOM = new SecureRandom();
+    private final Ed25519CurveParams CURVE = new Ed25519CurveParams();
+    private final BigInt ORDER = CURVE.getCurveOrder();
+    private final byte[] IDENTITY_ENCODED = new byte[Sodium.crypto_core_ed25519_BYTES];
 
     static {
+        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
+        NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
+    }
+
+    {
         IDENTITY_ENCODED[0] = 1;
     }
 
     @BeforeEach
-    public void initLibHomebrew() {
+    public void init() {
+        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
         NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
     }
 
@@ -45,38 +51,42 @@ public class Ed25519PointTest {
     public void testDoublingEqualsMulTwo() {
         var p = Ed25519PointOps.random();
         var dbl = p.dbl();
-        var mul2 = p.mul(BigInteger.valueOf(2));
+        var mul2 = p.mul(BigInt.TWO);
         assertEquals(dbl, mul2, "Double should equal multiplication by 2");
     }
 
     @Test
     public void testMulUnclampedIdentity() {
         var p = Ed25519PointOps.random();
-        var oneP = p.mulUnclamped(BigInteger.ONE);
+        var oneP = p.mulUnclamped(BigInt.ONE);
         assertEquals(p, oneP, "P * 1 should equal P (unclamped)");
     }
 
     @Test
     public void testBaseMulUnclamped() {
-        var B = Ed25519PointOps.baseMulUnclamped(BigInteger.ONE);
-        var B2 = Ed25519PointOps.baseMulUnclamped(BigInteger.valueOf(2));
+        var B = Ed25519PointOps.baseMulUnclamped(BigInt.ONE);
+        var B2 = Ed25519PointOps.baseMulUnclamped(BigInt.valueOf(2));
         assertEquals(B.add(B), B2, "2 * B should equal B.add(B) (unclamped)");
     }
 
     @Test
     public void testScalarInverseUnclamped() {
-        BigInteger rScalar;
+        BigInt rScalar;
         do {
-            rScalar = new BigInteger(ORDER.bitLength(), RANDOM).mod(ORDER);
+            rScalar = new BigInt(ORDER.bitLength(), RANDOM).mod(ORDER);
         } while (rScalar.signum() == 0);
 
         var p = Ed25519PointOps.baseMulUnclamped(rScalar);
 
-        BigInteger k;
+        BigInt k;
         do {
-            k = new BigInteger(ORDER.bitLength(), RANDOM).mod(ORDER);
-        } while (k.compareTo(BigInteger.ONE) < 0);
+            k = new BigInt(ORDER.bitLength(), RANDOM).mod(ORDER);
+        } while (k.compareTo(BigInt.ONE) < 0);
+
+        System.out.println("K= " + k);
         var inv = k.modInverse(ORDER);
+        System.out.println("K MOD INVERSE= " + inv);
+        System.out.println("ORDER=" + ORDER);
 
         var result = p.mulUnclamped(k).mulUnclamped(inv);
         assertEquals(p, result, "P * k * k^{-1} should equal P (for points in the prime-order subgroup)");
@@ -132,19 +142,19 @@ public class Ed25519PointTest {
     @Test
     public void testMulClampedProducesValidPoint() {
         var p = Ed25519PointOps.random();
-        var enc = p.mulClamped(BigInteger.valueOf(5)).encode(false);
+        var enc = p.mulClamped(BigInt.valueOf(5)).encode(false);
         assertTrue(() -> Ed25519PointOps.fromBytes(enc).isValid(), "Clamped multiplication should yield valid point");
     }
 
     @Test
     public void testBaseMulClampedProducesValidPoint() {
-        var enc = Ed25519PointOps.baseMulClamped(BigInteger.valueOf(5)).encode(false);
+        var enc = Ed25519PointOps.baseMulClamped(BigInt.valueOf(5)).encode(false);
         assertDoesNotThrow(() -> Ed25519PointOps.fromBytes(enc), "Clamped base multiplication should yield valid point");
     }
 
     @Test
     public void testSubZeroIdentity() {
-        var B = Ed25519PointOps.baseMulUnclamped(BigInteger.ZERO);
+        var B = Ed25519PointOps.baseMulUnclamped(BigInt.ZERO);
         assertArrayEquals(IDENTITY_ENCODED, B.encode(false), "0 * B should yield identity element");
     }
 }
