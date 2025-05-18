@@ -16,7 +16,7 @@ public class Secp256k1PointOpsTest {
     private static final BigInt K2;
 
     private static final Secp256k1PointOps INF;
-
+    private static final Secp256k1CurveParams CURVE;
     static {
         NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
         NativeLibrary.addSearchPath("secp256k1", "/opt/homebrew/Cellar/secp256k1/0.6.0/lib");
@@ -25,6 +25,7 @@ public class Secp256k1PointOpsTest {
         INF = Secp256k1PointOps.INFINITY;
         K1 = new BigInt("123456789", 10);
         K2 = new BigInt("987654321", 10);
+        CURVE = new Secp256k1CurveParams();
     }
 
     private static final HexFormat HEX = HexFormat.of();

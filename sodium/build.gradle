@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit'
-version = '0.0.9'
+version = '0.0.1'
 
 repositories {
     mavenCentral()
@@ -20,9 +20,9 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'org.exploit.threshield'
+            groupId = 'org.exploit.tss'
             artifactId = 'sodium'
-            version = '0.0.9'
+            version = '0.0.1'
 
             from components.java
         }

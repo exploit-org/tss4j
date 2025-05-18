@@ -1,8 +1,8 @@
 import com.sun.jna.NativeLibrary;
 import org.exploit.gmp.BigInt;
-import org.exploit.threshield.ed25519.Ed25519CurveParams;
-import org.exploit.threshield.ed25519.Ed25519PointOps;
-import org.exploit.threshield.sodium.Sodium;
+import org.exploit.ed25519.Ed25519CurveParams;
+import org.exploit.ed25519.Ed25519PointOps;
+import org.exploit.sodium.Sodium;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

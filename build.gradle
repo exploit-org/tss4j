@@ -3,8 +3,8 @@ plugins {
     id 'java-library'
 }
 
-group = 'org.exploit.threshield'
-version = '0.0.9'
+group = 'org.exploit.tss'
+version = '0.0.1'
 
 repositories {
     mavenCentral()
@@ -30,7 +30,6 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     api 'org.exploit:crypto:0.0.9'
-    api 'org.owasp.netryx:memory:1.0.0'
     api project(':sodium')
     api project(':bigint')
 }
@@ -48,9 +47,9 @@ apply plugin: 'maven-publish'
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'org.exploit.threshield'
+            groupId = 'org.exploit.tss'
             artifactId = 'core'
-            version = '0.0.9'
+            version = '0.0.1'
 
             from components.java
         }

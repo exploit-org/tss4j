@@ -1,6 +1,7 @@
 import com.sun.jna.NativeLibrary;
 import org.exploit.gmp.BigInt;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -294,5 +295,54 @@ public class BigIntTest {
         BigInt small = BigInt.valueOf(5);
         assertEquals(BigInt.ZERO, small.shiftRight(10), "5 >> 10 should be 0");
         assertEquals(BigInt.ZERO, BigInt.ZERO.shiftRight(100), "0 >> 100 should still be 0");
+    }
+
+    @Test
+    @DisplayName("Zero returns array of required length filled with zeros")
+    void zeroProducesAllZeros() {
+        BigInt n = BigInt.ZERO;
+        assertArrayEquals(new byte[]{0, 0, 0, 0}, n.toUnsignedByteArray(4));
+    }
+
+    @Test
+    @DisplayName("128 (0x80) has no extra sign byte")
+    void positiveNoExtraSignByte() {
+        BigInt n = BigInt.valueOf(128);
+        assertArrayEquals(new byte[]{(byte) 0x80}, n.toUnsignedByteArray(1));
+    }
+
+    @Test
+    @DisplayName("255 (0xFF) padded with leading zero")
+    void paddedWithLeadingZero() {
+        BigInt n = BigInt.valueOf(255);
+        assertArrayEquals(new byte[]{0x00, (byte) 0xFF}, n.toUnsignedByteArray(2));
+    }
+
+    @Test
+    @DisplayName("65535 (0xFFFF) fits exactly in 2 bytes")
+    void exactFit() {
+        BigInt n = BigInt.valueOf(65_535);
+        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF}, n.toUnsignedByteArray(2));
+    }
+
+    @Test
+    @DisplayName("Size ≤ 0 throws IllegalArgumentException")
+    void nonPositiveSizeThrows() {
+        BigInt n = BigInt.ONE;
+        assertThrows(IllegalArgumentException.class, () -> n.toUnsignedByteArray(0));
+    }
+
+    @Test
+    @DisplayName("Negative value throws ArithmeticException")
+    void negativeValueThrows() {
+        BigInt n = BigInt.valueOf(-1);
+        assertThrows(ArithmeticException.class, () -> n.toUnsignedByteArray(1));
+    }
+
+    @Test
+    @DisplayName("Number doesn't fit size throws IllegalArgumentException")
+    void tooSmallSizeThrows() {
+        BigInt n = BigInt.valueOf(256);
+        assertThrows(IllegalArgumentException.class, () -> n.toUnsignedByteArray(1));
     }
 }
