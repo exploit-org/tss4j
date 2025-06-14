@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit'
-version = '0.0.1'
+version = '0.0.2.4'
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.tss'
             artifactId = 'secp256k1'
-            version = '0.0.1'
+            version = '0.0.2.4'
 
             from components.java
         }
