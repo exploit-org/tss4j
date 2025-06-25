@@ -25,9 +25,9 @@ public class BigIntTest {
 
     @Test
     void fixedModInverse() {
-        BigInt a = BigInt.valueOf(3);
-        BigInt m = BigInt.valueOf(11);
-        BigInt inv = a.modInverse(m);
+        var a = BigInt.valueOf(3);
+        var m = BigInt.valueOf(11);
+        var inv = a.modInverse(m);
         assertEquals(BigInt.valueOf(4), inv, "3^{-1} mod 11 should be 4");
         assertEquals(BigInt.ONE, a.multiply(inv).mod(m));
     }
@@ -44,29 +44,29 @@ public class BigIntTest {
             a = new BigInt(256, RND).mod(m);
         } while (!a.gcd(m).equals(BigInt.ONE));
 
-        BigInt inv = a.modInverse(m);
+        var inv = a.modInverse(m);
 
         assertEquals(BigInt.ONE, a.multiply(inv).mod(m));
     }
 
     @Test
     void modInverseNonCoprime() {
-        BigInt a = BigInt.valueOf(2);
-        BigInt m = BigInt.valueOf(6);
+        var a = BigInt.valueOf(2);
+        var m = BigInt.valueOf(6);
         assertThrows(ArithmeticException.class, () -> a.modInverse(m));
     }
 
     @Test
     void modInverseNegativeModulus() {
-        BigInt a = BigInt.valueOf(3);
-        BigInt m = BigInt.valueOf(-11);
+        var a = BigInt.valueOf(3);
+        var m = BigInt.valueOf(-11);
         assertThrows(ArithmeticException.class, () -> a.modInverse(m));
     }
 
     @RepeatedTest(20)
     void negateProperties() {
-        BigInt x = new BigInt(256, RND);
-        BigInt y = x.negate();
+        var x = new BigInt(256, RND);
+        var y = x.negate();
 
         assertEquals(BigInt.ZERO, x.add(y));
         assertEquals(BigInt.ZERO, y.add(x));
@@ -243,13 +243,13 @@ public class BigIntTest {
 
     @Test
     void shiftLeft_zero() {
-        BigInt a = BigInt.valueOf(12345);
+        var a = BigInt.valueOf(12345);
         assertEquals(a, a.shiftLeft(0), "Shifting left by 0 should return the same value");
     }
 
     @Test
     void shiftRight_zero() {
-        BigInt a = BigInt.valueOf(-6789);
+        var a = BigInt.valueOf(-6789);
         assertEquals(a, a.shiftRight(0), "Shifting right by 0 should return the same value");
     }
 
@@ -267,13 +267,13 @@ public class BigIntTest {
 
     @Test
     void shiftLeft_negativeParameter_shouldBehaveAsShiftRight() {
-        BigInt original = BigInt.valueOf(12);
+        var original = BigInt.valueOf(12);
         assertEquals(BigInt.valueOf(3), original.shiftLeft(-2), "12 << -2 should be 12 >> 2 = 3");
     }
 
     @Test
     void shiftRight_negativeParameter_shouldBehaveAsShiftLeft() {
-        BigInt original = BigInt.valueOf(6);
+        var original = BigInt.valueOf(6);
         assertEquals(BigInt.valueOf(24), original.shiftRight(-2), "6 >> -2 should be 6 << 2 = 24");
     }
 
@@ -285,14 +285,14 @@ public class BigIntTest {
 
     @Test
     void shiftLeft_large() {
-        BigInt one = BigInt.ONE;
-        BigInt large = one.shiftLeft(100);
+        var one = BigInt.ONE;
+        var large = one.shiftLeft(100);
         assertEquals(101, large.bitLength(), "1 << 100 should have bit length 101");
     }
 
     @Test
     void shiftRight_largeBeyondSize() {
-        BigInt small = BigInt.valueOf(5);
+        var small = BigInt.valueOf(5);
         assertEquals(BigInt.ZERO, small.shiftRight(10), "5 >> 10 should be 0");
         assertEquals(BigInt.ZERO, BigInt.ZERO.shiftRight(100), "0 >> 100 should still be 0");
     }
@@ -300,49 +300,96 @@ public class BigIntTest {
     @Test
     @DisplayName("Zero returns array of required length filled with zeros")
     void zeroProducesAllZeros() {
-        BigInt n = BigInt.ZERO;
+        var n = BigInt.ZERO;
         assertArrayEquals(new byte[]{0, 0, 0, 0}, n.toUnsignedByteArray(4));
     }
 
     @Test
     @DisplayName("128 (0x80) has no extra sign byte")
     void positiveNoExtraSignByte() {
-        BigInt n = BigInt.valueOf(128);
+        var n = BigInt.valueOf(128);
         assertArrayEquals(new byte[]{(byte) 0x80}, n.toUnsignedByteArray(1));
     }
 
     @Test
     @DisplayName("255 (0xFF) padded with leading zero")
     void paddedWithLeadingZero() {
-        BigInt n = BigInt.valueOf(255);
+        var n = BigInt.valueOf(255);
         assertArrayEquals(new byte[]{0x00, (byte) 0xFF}, n.toUnsignedByteArray(2));
     }
 
     @Test
     @DisplayName("65535 (0xFFFF) fits exactly in 2 bytes")
     void exactFit() {
-        BigInt n = BigInt.valueOf(65_535);
+        var n = BigInt.valueOf(65_535);
         assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF}, n.toUnsignedByteArray(2));
     }
 
     @Test
     @DisplayName("Size ≤ 0 throws IllegalArgumentException")
     void nonPositiveSizeThrows() {
-        BigInt n = BigInt.ONE;
+        var n = BigInt.ONE;
         assertThrows(IllegalArgumentException.class, () -> n.toUnsignedByteArray(0));
     }
 
     @Test
     @DisplayName("Negative value throws ArithmeticException")
     void negativeValueThrows() {
-        BigInt n = BigInt.valueOf(-1);
+        var n = BigInt.valueOf(-1);
         assertThrows(ArithmeticException.class, () -> n.toUnsignedByteArray(1));
     }
 
     @Test
     @DisplayName("Number doesn't fit size throws IllegalArgumentException")
     void tooSmallSizeThrows() {
-        BigInt n = BigInt.valueOf(256);
+        var n = BigInt.valueOf(256);
         assertThrows(IllegalArgumentException.class, () -> n.toUnsignedByteArray(1));
+    }
+
+    @RepeatedTest(30)
+    void modPowSec_equals_regular() {
+        BigInt base = new BigInt(256, RND);
+        BigInt exp  = new BigInt(128, RND);
+
+        BigInt mod;
+        do {
+            mod = new BigInt(256, RND);
+        } while (mod.signum() == 0 || !mod.testBit(0));
+
+        BigInt regular = base.modPow(exp,  mod);
+        BigInt secure  = base.modPowSec(exp, mod);
+
+        assertEquals(regular, secure, "modPowSec should match regular modPow for odd modulus");
+    }
+
+    @RepeatedTest(30)
+    void multiplySec_equals_regular() {
+        var a = new BigInt(256, RND);
+        var b = new BigInt(256, RND);
+
+        var regular = a.multiply(b);
+        var secure = a.multiplySec(b);
+
+        assertEquals(regular, secure,
+                "multiplySec should match regular multiply");
+    }
+
+    @RepeatedTest(20)
+    void modInverseSec_equals_regular() {
+        BigInt m;
+        do {
+            m = new BigInt(256, RND);
+        } while (m.signum() == 0);
+
+        BigInt a;
+        do {
+            a = new BigInt(256, RND).mod(m);
+        } while (!a.gcd(m).equals(BigInt.ONE));
+
+        var regular = a.modInverse(m);
+        var secure = a.modInverseSec(m);
+
+        assertEquals(regular, secure, "modInverseSec should match regular modInverse");
+        assertEquals(BigInt.ONE, a.multiply(secure).mod(m));
     }
 }

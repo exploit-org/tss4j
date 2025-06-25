@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit.tss'
-version = '0.0.2.4'
+version = '0.0.3.6-BETA'
 
 repositories {
     mavenCentral()
@@ -23,6 +23,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation project(':ed25519')
     testImplementation project(':')
+    testImplementation project(':native-build')
 
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
@@ -37,7 +38,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.tss'
             artifactId = 'frost'
-            version = '0.0.2.4'
+            version = '0.0.3.6-BETA'
 
             from components.java
         }

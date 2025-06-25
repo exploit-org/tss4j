@@ -5,4 +5,5 @@ include 'ed25519'
 include 'sodium'
 include 'bigint'
 include 'secp256k1'
+include 'native-build'
 

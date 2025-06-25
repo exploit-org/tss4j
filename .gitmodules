@@ -1,0 +1,6 @@
+[submodule "native/libsodium"]
+	path = native/libsodium
+	url = https://github.com/jedisct1/libsodium.git
+[submodule "native/libsecp256k1"]
+	path = native/libsecp256k1
+	url = https://github.com/bitcoin-core/secp256k1.git

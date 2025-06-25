@@ -1,7 +1,9 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.sodium.ReadOnlyBuffer;
 import org.exploit.sodium.Sodium;
+import org.exploit.tss.TSS;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.nio.ReadOnlyBufferException;
 import java.util.Arrays;
@@ -10,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ReadOnlyBufferTests {
     static {
-        NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
+        TSS.loadLibraries();
     }
 
     @Test
@@ -60,5 +62,37 @@ public class ReadOnlyBufferTests {
                 "read() should fail after close");
         assertThrows(IllegalStateException.class, buf::asReadOnlyByteBuffer,
                 "asReadOnlyByteBuffer() should fail after close");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 3, 5, 7, 15, 33})
+    void readOnlyBufferActsReadOnly_oddSizes(int size) {
+        byte[] key = new byte[size];
+        Sodium.INSTANCE.randombytes_buf(key, key.length);
+        byte first = key[0];
+
+        try (var sec = new ReadOnlyBuffer(key)) {
+            var ro = sec.asReadOnlyByteBuffer();
+            assertTrue(ro.isReadOnly(), "Buffer not read-only for size=" + size);
+
+            assertEquals(first, ro.get(0),
+                    "Data mismatch at index 0 for size=" + size);
+            assertThrows(ReadOnlyBufferException.class,
+                    () -> ro.put(0, (byte) 1),
+                    "put should throw for size=" + size);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 3, 5, 7, 15, 33})
+    void operationsAfterCloseThrow_oddSizes(int size) {
+        byte[] key = new byte[size];
+        try (var buf = new ReadOnlyBuffer(key)) {
+            buf.close();
+            assertThrows(IllegalStateException.class, buf::read,
+                    "read() should fail after close for size=" + size);
+            assertThrows(IllegalStateException.class, buf::asReadOnlyByteBuffer,
+                    "asReadOnlyByteBuffer() should fail after close for size=" + size);
+        }
     }
 }

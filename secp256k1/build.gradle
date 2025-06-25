@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'org.exploit'
-version = '0.0.2.4'
+version = '0.0.3.6-BETA'
 
 repositories {
     mavenCentral()
@@ -22,6 +22,7 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation project(':')
+    testImplementation project(':native-build')
     implementation 'net.java.dev.jna:jna:5.17.0'
     compileOnly(project(':'))
     compileOnly 'org.projectlombok:lombok:1.18.38'
@@ -35,7 +36,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.tss'
             artifactId = 'secp256k1'
-            version = '0.0.2.4'
+            version = '0.0.3.6-BETA'
 
             from components.java
         }

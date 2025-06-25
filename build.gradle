@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.exploit.tss'
-version = '0.0.2.4'
+version = '0.0.3.6-BETA'
 
 repositories {
     mavenCentral()
@@ -23,13 +23,16 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation project(':ed25519')
+    testImplementation project(':native-build')
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 
     compileOnly 'org.projectlombok:lombok:1.18.38'
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    api 'org.exploit:crypto:0.0.9-patch1'
+    api 'org.bouncycastle:bcprov-jdk18on:1.81'
+    api 'net.java.dev.jna:jna:5.17.0'
+
     api project(':sodium')
     api project(':bigint')
 }
@@ -49,7 +52,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'org.exploit.tss'
             artifactId = 'core'
-            version = '0.0.2.4'
+            version = '0.0.3.6-BETA'
 
             from components.java
         }

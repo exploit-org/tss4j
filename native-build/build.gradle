@@ -1,0 +1,109 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'org.exploit.tss'
+version = '1.0.0'
+
+def os= org.gradle.internal.os.OperatingSystem.current()
+
+def osTag = os.isMacOsX() ? 'macos' : os.isWindows() ? 'windows' : 'linux'
+def arch = System.getProperty('os.arch')
+def ext = os.isMacOsX() ? 'dylib' : os.isWindows() ? 'dll' : 'so'
+
+def cpus = Runtime.runtime.availableProcessors()
+
+def buildSecp = tasks.register('buildSecp256k1') {
+    doLast {
+        exec {
+            commandLine 'bash', '-c', """
+                set -e
+                cd $rootDir/native/libsecp256k1
+
+                [ -f Makefile ] && make distclean || true
+                git clean -xdf
+                
+                ./autogen.sh
+                ./configure --enable-experimental \
+                             --enable-module-extrakeys \
+                             --enable-module-schnorrsig \
+                             --enable-module-recovery \
+                             --enable-shared \
+                             --disable-static
+                make -j${cpus}
+            """
+        }
+    }
+}
+
+def buildSodium = tasks.register('buildSodium') {
+    doLast {
+        exec {
+            commandLine 'bash', '-c', """
+                set -e
+                cd $rootDir/native/libsodium
+
+                [ -f Makefile ] && make distclean || true
+                git clean -xdf
+
+                ./autogen.sh
+
+                ./configure --enable-shared --disable-static --disable-minimal --with-pic
+                make -j${Runtime.runtime.availableProcessors()}
+            """
+        }
+    }
+}
+
+def gmpFlags = [
+        '--enable-shared',
+        '--disable-static',
+        '--enable-fat'
+].findAll { it }.join(' ')
+
+def buildGmp = tasks.register('buildGmp') {
+    doLast {
+        exec {
+            commandLine 'bash', '-c', """
+              set -e
+              cd $rootDir/native/libgmp
+              [ -f Makefile ] && make distclean || true
+              git clean -xdf
+              ./configure ${gmpFlags}
+              make -j${cpus}
+            """
+        }
+    }
+}
+
+def nativesDir = "$buildDir/natives/natives/${osTag}-${arch}"
+
+tasks.register('assembleNatives', Copy) {
+    dependsOn buildSodium, buildSecp, buildGmp
+    into(nativesDir)
+
+    from("$rootDir/native/libsodium/src/libsodium/.libs") {
+        include "libsodium.*.${ext}"
+        exclude "libsodium.${ext}"
+        rename { _ -> "libsodium.${ext}" }
+    }
+
+    from("$rootDir/native/libsecp256k1/.libs") {
+        include "libsecp256k1.*.${ext}"
+        exclude "libsecp256k1.${ext}"
+        rename { _ -> "libsecp256k1.${ext}" }
+    }
+
+    from("$rootDir/native/libgmp/.libs") {
+        include "libgmp.*.${ext}"
+        exclude "libgmp.${ext}"
+        rename { _ -> "libgmp.${ext}" }
+    }
+}
+
+jar {
+    dependsOn 'assembleNatives'
+    archiveBaseName.set('tss4j-natives')
+    archiveClassifier.set("${osTag}-${arch}-${version}")
+    into("natives/${osTag}-${arch}") { from(nativesDir) }
+}

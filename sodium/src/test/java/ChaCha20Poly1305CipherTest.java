@@ -1,6 +1,6 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.sodium.Sodium;
 import org.exploit.sodium.cipher.ChaCha20Poly1305Cipher;
+import org.exploit.tss.TSS;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -18,7 +18,7 @@ public class ChaCha20Poly1305CipherTest {
     }
 
     static {
-        NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
+        TSS.loadLibraries();
     }
 
     @Test
