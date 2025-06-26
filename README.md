@@ -1,40 +1,42 @@
 # tss4j
-*Java Threshold Crypto Library*
+*Threshold Signature Schemes for Java*
 
 ---
-
+This library is used as the core cryptographic engine in [TKeeper](https://github.com/exploit-org/tkeeper), a threshold signature service based on FROST and GG20.
 ## Modules
-| Module        | Description                                             |
-|---------------|---------------------------------------------------------|
-| **frost**     | FROST (Schnorr) *t-of-n* signatures                     |
-| **gg20**      | GG20 (ECDSA) *t-of-n* signatures + MtA/Paillier helpers |
-| **ed25519**   | Point-ops & utilities for Ed25519 curve (FROST)         |
-| **secp256k1** | Point-ops for secp256k1 (GG20 & optional FROST)         |
-| **bigint**    | JNA layer → **libgmp-sec**                              |
-| **sodium**    | JNA layer → **libsodium** (Ed25519 math)                |
+
+| Module        | Purpose                                                          |
+|---------------|------------------------------------------------------------------|
+| **frost**     | FROST (Schnorr-based) *t-of-n* signatures                        |
+| **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with MtA/Paillier core    |
+| **ed25519**   | Curve operations and helpers for Ed25519 (used in FROST)         |
+| **secp256k1** | Curve operations for secp256k1 (used in GG20 and optional FROST) |
+| **bigint**    | JNA bindings to **libgmp-sec** (constant-time big integer ops)   |
+| **sodium**    | JNA bindings to **libsodium** (Ed25519 point ops and hashing)    |
 
 ---
 
-## Security Notes (2025-06)
+## Security Notes (June 2025)
 
-| Topic                                          | Mitigation in **tss4j**                                       |
-|------------------------------------------------|---------------------------------------------------------------|
-| **TSSHOCK / α-shuffle** – ambiguous hash input | All Fiat–Shamir transcripts use TLV encoding (`Bytes.encode`) |
-| **c-guess / short challenge**                  | Challenges = 256 bit → soundness ≥ 2⁻²⁵⁶                      |
-| **β-leak / BitForge #2**                       | β, ρ, σ, τ, r generated via `randomZnStar` (gcd = 1)          |
-| **Bad modulus / BitForge #1**                  | Paillier keys checked with PoK(N) + sieve for factors < 2¹⁶   |
-| **Rogue-key (FROST)**                          | Schnorr PoP(Yᵢ) published before signing                      |
-| **Equivocation list B**                        | Echo-broadcast of `Hash(B)`; mismatch ⇒ abort & blame         |
+| Topic                                  | Mitigation                                                 |
+|----------------------------------------|------------------------------------------------------------|
+| **TSSHOCK / α-shuffle**                | TLV encoding of all transcripts (`Bytes.encode`)           |
+| **c-guess / short challenge**          | 256-bit challenges: statistical soundness ≥ 2⁻²⁵⁶          |
+| **β-leak / BitForge #2**               | All β, ρ, σ, τ, r ← `randomZnStar`, enforced `gcd = 1`     |
+| **Weak modulus / BitForge #1**         | Paillier modulus verified with PoK(N) + small factor sieve |
+| **Rogue-key in FROST**                 | Requires Schnorr PoP(Yᵢ) before aggregation                |
+| **Equivocation on B (broadcast list)** | Echo-broadcast with hash verification; mismatch ⇒ abort    |
 
-> **Threat-model:** active insider ≤ t-1, adaptive corruption.  
-> Pure hardware leaks (EM, power) and RNG compromise are **out of scope**,  
-> but we still reduce timing/cache leaks with constant-time primitives.
+> **Threat model:** up to *t–1* active insiders, adaptive corruptions.  
+> Physical side channels (EM, power) and RNG compromise are **not in scope**,  
+> but constant-time code paths are used throughout to reduce leak surface.
 
 ---
 
-## Constant-Time Implementation
+## Constant-Time Guarantees
 
-* **BigInt layer** = GMP-sec: `modPowSec`, `multiplySec`, `sqrSec`, `modInverseSec`
-* Every path touching **secret scalars** calls the *_Sec* variant; public data uses fast ops
-* GG20 δ-inverse uses `modInverseSec`
-* Ed25519 & secp256k1 point math rely on libsodium / libsecp256k1 constant-time ecmult
+- All secret scalar operations use `_Sec` variants in the `bigint` module (`modPowSec`, `modInverseSec`, `sqrSec`, etc.)
+- Curve operations use constant-time primitives via **libsodium** and **libsecp256k1**
+- No sensitive values are processed with variable-time arithmetic
+
+---
