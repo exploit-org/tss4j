@@ -1,9 +1,19 @@
 plugins {
+    id 'java'
     id 'java-library'
 }
 
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+apply plugin: 'tech.yanand.maven-central-publish'
+
 group = 'org.exploit.tss'
 version = '1.0.0'
+
+ext {
+    projectName = "TSS4J Native Bundle"
+    projectDescription = "Native libraries for TSS4J, including secp256k1, sodium, and GMP"
+}
 
 def os= org.gradle.internal.os.OperatingSystem.current()
 
@@ -12,6 +22,31 @@ def arch = System.getProperty('os.arch')
 def ext = os.isMacOsX() ? 'dylib' : os.isWindows() ? 'dll' : 'so'
 
 def cpus = Runtime.runtime.availableProcessors()
+
+def inc = { String libname ->
+    switch (osTag) {
+        case "macos":
+            return ["${libname}.*.${ext}"]
+        case "linux":
+            return ["${libname}.${ext}.*"]
+        case "windows":
+            return ["${libname}.${ext}"]
+        default:
+            throw new GradleException("Unsupported platform: $osTag")
+    }
+}
+
+def exc = { String libname ->
+    switch (osTag) {
+        case "macos":
+        case "linux":
+            return ["${libname}.${ext}"]
+        case "windows":
+            return []
+        default:
+            throw new GradleException("Unsupported platform: $osTag")
+    }
+}
 
 def buildSecp = tasks.register('buildSecp256k1') {
     doLast {
@@ -83,21 +118,34 @@ tasks.register('assembleNatives', Copy) {
     into(nativesDir)
 
     from("$rootDir/native/libsodium/src/libsodium/.libs") {
-        include "libsodium.*.${ext}"
-        exclude "libsodium.${ext}"
+        include inc("libsodium")
+        exclude exc("libsodium")
         rename { _ -> "libsodium.${ext}" }
     }
 
     from("$rootDir/native/libsecp256k1/.libs") {
-        include "libsecp256k1.*.${ext}"
-        exclude "libsecp256k1.${ext}"
+        include inc("libsecp256k1")
+        exclude exc("libsecp256k1")
         rename { _ -> "libsecp256k1.${ext}" }
     }
 
     from("$rootDir/native/libgmp/.libs") {
-        include "libgmp.*.${ext}"
-        exclude "libgmp.${ext}"
+        include inc("libgmp")
+        exclude exc("libgmp")
         rename { _ -> "libgmp.${ext}" }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    if (!gradle.startParameter.taskNames.any { it.startsWith(":native-build") }) {
+        tasks.matching { it.name in [
+                "publish",
+                "publishToMavenCentralPortal",
+                "zipBundleForUpload",
+                "publishNativeBundlePublicationToMavenCentralRepository"
+        ] }.configureEach {
+            enabled = false
+        }
     }
 }
 

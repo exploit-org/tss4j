@@ -2,8 +2,10 @@ plugins {
     id 'java'
 }
 
-group = 'org.exploit.tss'
-version = '0.0.3.6-BETA'
+ext {
+    projectName = "Ed25519 Point Ops"
+    projectDescription = "Ed25519 point operations for TSS4J"
+}
 
 repositories {
     mavenCentral()
@@ -30,42 +32,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 }
 
-apply plugin: 'maven-publish'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'org.exploit.tss'
-            artifactId = 'ed25519'
-            version = '0.0.3.6-BETA'
-
-            from components.java
-        }
-    }
-
-    repositories {
-        maven {
-            url 'http://maven.hub/'
-            credentials {
-                username mavenUsername
-                password mavenPassword
-            }
-
-            allowInsecureProtocol = true
-        }
-    }
-}
-
-jar {
-    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-
-    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
-}
-
 tasks.named("jar") {
     dependsOn(":jar")
+    dependsOn(":sodium:jar")
 }
 
 test {

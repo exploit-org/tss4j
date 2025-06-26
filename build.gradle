@@ -1,22 +1,16 @@
 plugins {
     id 'java'
     id 'java-library'
+    id 'tech.yanand.maven-central-publish' version '1.2.0'
 }
-
-group = 'org.exploit.tss'
-version = '0.0.3.6-BETA'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'http://maven.hub/'
-        credentials {
-            username mavenUsername
-            password mavenPassword
-        }
+}
 
-        allowInsecureProtocol = true
-    }
+ext {
+    projectName = "TSS4J Core"
+    projectDescription = "Core of TSS4J, a Java library for Threshold Signature Schemes"
 }
 
 dependencies {
@@ -37,36 +31,139 @@ dependencies {
     api project(':bigint')
 }
 
-jar {
-    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-
-    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
+tasks.named("jar") {
+    dependsOn(":sodium:jar")
+    dependsOn(":bigint:jar")
 }
 
-apply plugin: 'maven-publish'
+tasks.named("test") {
+    dependsOn(":ed25519:jar")
+    dependsOn(":native-build:jar")
+}
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'org.exploit.tss'
-            artifactId = 'core'
-            version = '0.0.3.6-BETA'
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'java-library'
 
-            from components.java
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok:1.18.28'
+        annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    }
+
+    tasks.withType(Jar).configureEach {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+        from(configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }) {
+            exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
         }
     }
 
-    repositories {
-        maven {
-            url 'http://maven.hub/'
-            credentials {
-                username mavenUsername
-                password mavenPassword
+    apply plugin: 'signing'
+    apply plugin: 'maven-publish'
+    apply plugin: 'tech.yanand.maven-central-publish'
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.addStringOption("Xdoclint:none", "-quiet")
+        options.addBooleanOption("html5", true)
+        options.addBooleanOption("Xdoclint:-missing", true)
+    }
+
+    group = 'org.exploit'
+    version = ext.getProperties().get('version') == null ? '0.0.1' : ext.version
+
+    mavenCentral {
+        repoDir = layout.buildDirectory.dir('repos/bundles')
+        authToken = System.getenv("CENTRAL_MAVEN_TOKEN")
+        publishingType = 'USER_MANAGED'
+    }
+
+    afterEvaluate { p ->
+        if (p.ext.projectName == "TSS4J Native Bundle") {
+            return
+        }
+
+        def javadocJarTask = p.tasks.findByName("javadocJar")
+        def sourcesJarTask = p.tasks.findByName("sourcesJar")
+
+        if (javadocJarTask != null) {
+            switch (p.ext.projectName) {
+                case "TSS4J Core":
+                    javadocJarTask.dependsOn(":ed25519:jar")
+                    javadocJarTask.dependsOn(":sodium:jar")
+                    javadocJarTask.dependsOn(":bigint:jar")
+
+                    sourcesJarTask.dependsOn(":ed25519:jar")
+                    sourcesJarTask.dependsOn(":sodium:jar")
+                    sourcesJarTask.dependsOn(":bigint:jar")
+                    break
+                case "Ed25519 Point Ops":
+                    sourcesJarTask.dependsOn(":sodium:jar")
+                    javadocJarTask.dependsOn(":sodium:jar")
+                    break
+                default:
+                    break
+            }
+        }
+
+        publishing {
+            publications {
+                mavenJava(MavenPublication) {
+                    from components.java
+
+                    pom {
+                        name = p.ext.projectName
+                        description = p.ext.projectDescription
+                        url = 'https://github.com/exploit-org/tss4j'
+
+                        licenses {
+                            license {
+                                name = 'Apache License 2.0'
+                                url = 'https://github.com/exploit-org/tss4j/blob/main/LICENSE'
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                id = '0'
+                                name = 'Martin Belov'
+                                email = 'martin@exploit.org'
+                            }
+                        }
+
+                        scm {
+                            connection = 'scm:git:https://github.com/exploit-org/tss4j.git'
+                            developerConnection = 'scm:git:ssh://github.com/exploit-org/tss4j.git'
+                            url = 'https://github.com/exploit-org/tss4j'
+                        }
+                    }
+                }
             }
 
-            allowInsecureProtocol = true
+            repositories {
+                maven {
+                    name = "Local"
+                    url = file("${buildDir}/repos/bundles")
+                }
+            }
+
+            signing {
+                sign publishing.publications.mavenJava
+            }
         }
     }
 }

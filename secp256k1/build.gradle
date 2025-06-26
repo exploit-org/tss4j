@@ -2,8 +2,10 @@ plugins {
     id 'java'
 }
 
-group = 'org.exploit'
-version = '0.0.3.6-BETA'
+ext {
+    projectName = "Secp256k1 Point Ops"
+    projectDescription = "Secp256k1 point operations for TSS4J"
+}
 
 repositories {
     mavenCentral()
@@ -29,38 +31,12 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
 }
 
-apply plugin: 'maven-publish'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'org.exploit.tss'
-            artifactId = 'secp256k1'
-            version = '0.0.3.6-BETA'
-
-            from components.java
-        }
-    }
-
-    repositories {
-        maven {
-            url 'http://maven.hub/'
-            credentials {
-                username mavenUsername
-                password mavenPassword
-            }
-
-            allowInsecureProtocol = true
-        }
-    }
+tasks.named("jar") {
+    dependsOn(":jar")
 }
 
-jar {
-    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-
-    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
+tasks.named("test") {
+    dependsOn(":native-build:jar")
 }
 
 test {

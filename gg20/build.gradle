@@ -2,8 +2,10 @@ plugins {
     id 'java'
 }
 
-group = 'org.exploit.tss'
-version = '0.0.3.6-BETA'
+ext {
+    projectName = "GG20 Client"
+    projectDescription = "GG20 Threshold Signatures Client for TSS4J"
+}
 
 repositories {
     mavenCentral()
@@ -30,34 +32,12 @@ dependencies {
     compileOnly(project(":"))
 }
 
-apply plugin: 'maven-publish'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'org.exploit.tss'
-            artifactId = 'gg20'
-            version = '0.0.3.6-BETA'
-
-            from components.java
-        }
-    }
-
-    repositories {
-        maven {
-            url 'http://maven.hub/'
-            credentials {
-                username mavenUsername
-                password mavenPassword
-            }
-
-            allowInsecureProtocol = true
-        }
-    }
-}
-
 tasks.named("jar") {
     dependsOn(":jar")
+}
+
+tasks.named("test") {
+    dependsOn(":secp256k1:jar")
 }
 
 test {

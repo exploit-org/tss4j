@@ -2,8 +2,10 @@ plugins {
     id 'java'
 }
 
-group = 'org.exploit.tss'
-version = '0.0.3.6-BETA'
+ext {
+    projectName = "FROST Client"
+    projectDescription = "FROST Threshold Signatures Client for TSS4J"
+}
 
 repositories {
     mavenCentral()
@@ -29,40 +31,6 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
     compileOnly project(":")
     implementation 'com.google.guava:guava:33.4.8-jre'
-}
-
-apply plugin: 'maven-publish'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'org.exploit.tss'
-            artifactId = 'frost'
-            version = '0.0.3.6-BETA'
-
-            from components.java
-        }
-    }
-
-    repositories {
-        maven {
-            url 'http://maven.hub/'
-            credentials {
-                username mavenUsername
-                password mavenPassword
-            }
-
-            allowInsecureProtocol = true
-        }
-    }
-}
-
-jar {
-    setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-
-    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
-        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    }
 }
 
 tasks.named("jar") {
