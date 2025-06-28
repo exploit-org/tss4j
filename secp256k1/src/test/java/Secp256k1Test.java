@@ -1,4 +1,3 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.secp256k1.Secp256k1;
 import org.exploit.tss.TSS;
 import org.junit.jupiter.api.RepeatedTest;
@@ -12,7 +11,6 @@ class Secp256k1Test {
     private static final SecureRandom RNG = new SecureRandom();
 
     static {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
         TSS.loadLibraries();
     }
 

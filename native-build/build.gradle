@@ -136,6 +136,10 @@ tasks.register('assembleNatives', Copy) {
     }
 }
 
+tasks.withType(Copy).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 gradle.taskGraph.whenReady { graph ->
     if (!gradle.startParameter.taskNames.any { it.startsWith(":native-build") }) {
         tasks.matching { it.name in [

@@ -1,4 +1,3 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.ed25519.Ed25519;
 import org.exploit.sodium.Sodium;
 import org.exploit.tss.TSS;
@@ -11,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class Ed25519Test {
     static {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
         TSS.loadLibraries();
     }
 

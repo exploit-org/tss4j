@@ -1,5 +1,5 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.gmp.BigInt;
+import org.exploit.tss.TSS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
@@ -14,7 +14,7 @@ public class BigIntTest {
 
     @BeforeEach
     public void setUp() {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
+        TSS.loadLibraries();
     }
 
     @Test

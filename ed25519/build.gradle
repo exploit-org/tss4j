@@ -9,15 +9,6 @@ ext {
 
 repositories {
     mavenCentral()
-    maven {
-        url 'http://maven.hub/'
-        credentials {
-            username mavenUsername
-            password mavenPassword
-        }
-
-        allowInsecureProtocol = true
-    }
 }
 
 dependencies {

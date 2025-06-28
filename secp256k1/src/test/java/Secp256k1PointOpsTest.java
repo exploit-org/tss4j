@@ -1,7 +1,7 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.gmp.BigInt;
 import org.exploit.secp256k1.Secp256k1CurveParams;
 import org.exploit.secp256k1.Secp256k1PointOps;
+import org.exploit.tss.TSS;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,8 +18,7 @@ public class Secp256k1PointOpsTest {
     private static final Secp256k1PointOps INF;
     private static final Secp256k1CurveParams CURVE;
     static {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
-        NativeLibrary.addSearchPath("secp256k1", "/opt/homebrew/Cellar/secp256k1/0.6.0/lib");
+        TSS.loadLibraries();
 
         N = Secp256k1CurveParams.CURVE_ORDER;
         INF = Secp256k1PointOps.INFINITY;

@@ -1,9 +1,8 @@
-import com.sun.jna.NativeLibrary;
 import org.exploit.ed25519.Ed25519CurveParams;
 import org.exploit.ed25519.Ed25519PointOps;
 import org.exploit.gmp.BigInt;
 import org.exploit.sodium.Sodium;
-import org.junit.jupiter.api.BeforeEach;
+import org.exploit.tss.TSS;
 import org.junit.jupiter.api.Test;
 
 import java.security.SecureRandom;
@@ -17,18 +16,11 @@ public class Ed25519PointTest {
     private final byte[] IDENTITY_ENCODED = new byte[Sodium.crypto_core_ed25519_BYTES];
 
     static {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
-        NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
+        TSS.loadLibraries();
     }
 
     {
         IDENTITY_ENCODED[0] = 1;
-    }
-
-    @BeforeEach
-    public void init() {
-        NativeLibrary.addSearchPath("gmp", "/opt/homebrew/Cellar/gmp/6.3.0/lib");
-        NativeLibrary.addSearchPath("sodium", "/opt/homebrew/Cellar/libsodium/1.0.20/lib");
     }
 
     @Test
