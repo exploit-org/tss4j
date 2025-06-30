@@ -156,6 +156,16 @@ gradle.taskGraph.whenReady { graph ->
 jar {
     dependsOn 'assembleNatives'
     archiveBaseName.set('tss4j-natives')
-    archiveClassifier.set("${osTag}-${arch}-${version}")
+    archiveClassifier.set("${osTag}-${arch}")
     into("natives/${osTag}-${arch}") { from(nativesDir) }
+}
+
+tasks.named('sourcesJar') {
+    archiveBaseName.set('tss4j-natives')
+    archiveClassifier.set("${osTag}-${arch}-sources")
+}
+
+tasks.named('javadocJar') {
+    archiveBaseName.set('tss4j-natives')
+    archiveClassifier.set("${osTag}-${arch}-javadoc")
 }
