@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+ext {
+    projectName = "ECIES"
+    projectDescription = "Threshold Integrated Encryption Scheme based on ElGamal"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation project(':native-build')
+    testImplementation project(':secp256k1')
+    testImplementation project(':')
+
+    compileOnly project(':')
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.81'
+}
+
+test {
+    useJUnitPlatform()
+}

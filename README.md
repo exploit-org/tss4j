@@ -9,6 +9,7 @@ This library is used as the core cryptographic engine in [TKeeper](https://githu
 |---------------|------------------------------------------------------------------|
 | **frost**     | FROST (Schnorr-based) *t-of-n* signatures                        |
 | **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with MtA/Paillier core    |
+| **ecies**     | Threshold Elliptic Curve Integrated Encryption Scheme            |
 | **ed25519**   | Curve operations and helpers for Ed25519 (used in FROST)         |
 | **secp256k1** | Curve operations for secp256k1 (used in GG20 and optional FROST) |
 | **bigint**    | JNA bindings to **libgmp-sec** (constant-time big integer ops)   |
