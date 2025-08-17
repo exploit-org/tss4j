@@ -97,9 +97,18 @@ A focused, production-oriented library that implements multi-party ECDSA (GG20),
 ## Requirements
 
 - JDK 17+ (LTS recommended)
-- Native libraries available on the system library path:
-    - **libgmp** for constant-time big-integer operations
-    - **libsodium** for curve operations and hashing
+- Native libraries are linked:
+```groovy
+implementation("org.exploit:tss4j-natives:1.0.0:linux-amd64@jar")
+implementation("org.exploit:tss4j-natives:1.0.0:macos-aarch64@jar")
+implementation("org.exploit:tss4j-natives:1.0.0:windows-amd64@jar")
+```
+
+Make sure you load them via:
+```java
+TSS.loadLibraries();
+```
+
 - A secure source of randomness for key generation; ZK transcripts use the built-in DRBG
 
 ## License
