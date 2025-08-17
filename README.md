@@ -1,43 +1,107 @@
 # tss4j
-*Threshold Signature Schemes for Java*
+**Threshold Signature Schemes for Java**
+
+A focused, production-oriented library that implements multi-party ECDSA (GG20), Schnorr (FROST), and supporting ZK building blocks. The goal is straightforward: make threshold signing safe to deploy without forcing application teams to become cryptographers.
 
 ---
-This library is used as the core cryptographic engine in [TKeeper](https://github.com/exploit-org/tkeeper), a threshold signature service based on FROST and GG20.
+
 ## Modules
 
-| Module        | Purpose                                                          |
-|---------------|------------------------------------------------------------------|
-| **frost**     | FROST (Schnorr-based) *t-of-n* signatures                        |
-| **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with MtA/Paillier core    |
-| **ecies**     | Threshold Elliptic Curve Integrated Encryption Scheme            |
-| **ed25519**   | Curve operations and helpers for Ed25519 (used in FROST)         |
-| **secp256k1** | Curve operations for secp256k1 (used in GG20 and optional FROST) |
-| **bigint**    | JNA bindings to **libgmp-sec** (constant-time big integer ops)   |
-| **sodium**    | JNA bindings to **libsodium** (Ed25519 point ops and hashing)    |
+| Module        | Purpose                                                      |
+|---------------|--------------------------------------------------------------|
+| **frost**     | FROST (Schnorr-based) *t-of-n* signatures                    |
+| **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with Paillier/MtA     |
+| **ecies**     | Threshold Elliptic Curve Integrated Encryption Scheme        |
+| **ed25519**   | Ed25519 Point Ops                                            |
+| **secp256k1** | secp256k1 curve operations (used in GG20 and optional FROST) |
+| **bigint**    | JNA bindings to **libgmp** (constant-time big-integer ops)   |
+| **sodium**    | JNA bindings to **libsodium** (point ops and hashing)        |
 
 ---
 
-## Security Notes (June 2025)
+## What you get
 
-| Topic                                  | Mitigation                                                 |
-|----------------------------------------|------------------------------------------------------------|
-| **TSSHOCK / α-shuffle**                | TLV encoding of all transcripts (`Bytes.encode`)           |
-| **c-guess / short challenge**          | 256-bit challenges: statistical soundness ≥ 2⁻²⁵⁶          |
-| **β-leak / BitForge #2**               | All β, ρ, σ, τ, r ← `randomZnStar`, enforced `gcd = 1`     |
-| **Weak modulus / BitForge #1**         | Paillier modulus verified with PoK(N) + small factor sieve |
-| **Rogue-key in FROST**                 | Requires Schnorr PoP(Yᵢ) before aggregation                |
-| **Equivocation on B (broadcast list)** | Echo-broadcast with hash verification; mismatch ⇒ abort    |
-
-> **Threat model:** up to *t–1* active insiders, adaptive corruptions.  
-> Physical side channels (EM, power) and RNG compromise are **not in scope**,  
-> but constant-time code paths are used throughout to reduce leak surface.
+- **GG20 ECDSA** with hardened MtA: Paillier range proofs, respondent proofs,  and strict modulus validation.
+- **FROST Schnorr** with proof-of-possession to prevent rogue-key aggregation.
+- **ECIES** encryption scheme with threshold key generation and decryption.
+- **Constant-time primitives** for secrets: modular exponentiation/inversion, scalar ops, and curve math.
 
 ---
+## Thread Model (August 2025)
 
-## Constant-Time Guarantees
+### Scope
+- GG20 Paillier MtA: proofs, validators, MtAProtocol, ZKSetup
+- FROST: preprocessor, partial signer, aggregator, transcript hashing
+- Encoding/RNG: TLV (Bytes.encode), ZKRandom (Secure Random Instance Strong)
 
-- All secret scalar operations use `_Sec` variants in the `bigint` module (`modPowSec`, `modInverseSec`, `sqrSec`, etc.)
-- Curve operations use constant-time primitives via **libsodium** and **libsecp256k1**
-- No sensitive values are processed with variable-time arithmetic
+### Assets
+- Paillier private key (λ, μ, p, q), Paillier randomness r
+- Secret shares sk_i, one-time nonces d_i, e_i, r (PoP)
+- Session transcripts (commitments, contexts, AAD)
+- Group public keys and Paillier N
 
----
+### Invariants (must hold)
+- Paillier N ≥ 3072 bits and N ≥ q^8
+- ZKSetup: ĤN is Blum (p≡q≡3 mod 4); h1, h2 ∈ QR(ĤN); gcd(h_i, ĤN)=1
+- FROST: identical additionalContext (AAD) for all parties per operation; identical sorted commitment list
+- All hashed data is TLV-encoded; no ad-hoc concatenation
+- One-time nonces (d, e, r, Paillier r) are never reused and are destroyed after use
+
+### Attack surfaces and mitigations (by class)
+
+#### Malformed/weak Paillier modulus (key extraction)
+  - BiPrime proof: org.exploit.tss.proof.paillier.BiPrimeProofGenerator / BiPrimeProofValidator
+  - NoSmallFactor proof: NoSmallFactorProofGenerator / NoSmallFactorProofValidator
+
+#### Range abuse in MtA (out-of-range plaintexts)
+  - PaillierRangeProof: PaillierRangeProofGenerator / PaillierRangeProofValidator
+    * Witness: PaillierRangeEncryptionWitness(m,r,c,pk,zk,q)
+    * Context: PaillierRangeProofContext(c,q,zk,ctx)
+    * Enforces m ∈ [0,q), binds to ciphertext c; s1 ∈ Z_{q^3}
+
+#### Malformed MtA response (arbitrary c_j)
+  - PaillierRespondentProof: PaillierRespondentProofGenerator / PaillierRespondentProofValidator
+    * Context: PaillierRespondentProofContext(c_i,c_j,q,zk,ctx)
+    * Binds c_j to (c_i, b, y, r_j); checks s1 ∈ Z_{q^3}, t1 ∈ Z_{q^7}; rejects non-units
+  - MtAProtocol: validatePaillierN enforces N ≥ q^8; computeCjWithY constructs c_j with Enc(y; r_j) and requires a valid proof
+
+#### Transcript mixups / cross-session reuse
+  - TLV everywhere: org.exploit.tss.bytes.Bytes.encode
+  - Context/AAD binding:
+    * GG20 proofs include session context bytes
+    * FROST H1/H2 include AAD; PoP includes AAD
+
+#### Rogue-key and aggregator vectors (FROST)
+  - PoP: FrostPreProcessor.generateCommitment creates sigma = r + c·sk_i
+    * c = H(POP_DOMAIN || AAD || Y_i || R)
+  - PoP verify: SignaturePartAggregator.verifyPoP uses same challenge inputs
+  - Binding factors: FrostHash.H1(idx,msg,AAD,B,q), FrostHash.H2(R,Y,msg,AAD,q)
+    * R = Σ(D_j + ρ_j E_j); per-share check g·z_i = D_i + ρ_i E_i + λ_i·c·Y_i
+  - Aggregator enforces identical AAD and identical participant list
+
+#### Replay / cross-protocol reuse
+  - Domain tags in all FROST hashes (H1/H2/PoP); TLV encoding of inputs
+  - GG20 proofs bind to exact ciphertexts and to context
+
+#### RNG misuse / nonce reuse
+  - ZKRandom backed by CSPRNG; fresh (d,e,r, r_j) per session
+  - Operational requirement: zero/destroy one-time values after use
+
+#### Performance hardening
+- Paillier proofs (generation/verification) are parallelized across independent rounds; no shared mutable state
+
+#### Residual risks
+- Threshold assumption: compromise/collusion of ≥ t parties breaks secrecy/unforgeability
+- Side channels beyond timing (EM/power/cache) are out of scope; deploy on hardened hosts
+
+## Requirements
+
+- JDK 17+ (LTS recommended)
+- Native libraries available on the system library path:
+    - **libgmp** for constant-time big-integer operations
+    - **libsodium** for curve operations and hashing
+- A secure source of randomness for key generation; ZK transcripts use the built-in DRBG
+
+## License
+
+tss4j is licensed under [Apache License 2.0](LICENSE)
