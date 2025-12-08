@@ -7,16 +7,17 @@ A focused, production-oriented library that implements multi-party ECDSA (GG20),
 
 ## Modules
 
-| Module        | Purpose                                                      |
-|---------------|--------------------------------------------------------------|
-| **frost**     | FROST (Schnorr-based) *t-of-n* signatures                    |
-| **taproot**   | BIP340 & Taproot FROST schemes for Secp256k1                 |
-| **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with Paillier/MtA     |
-| **ecies**     | Threshold Elliptic Curve Integrated Encryption Scheme        |
-| **ed25519**   | Ed25519 Point Ops                                            |
-| **secp256k1** | secp256k1 curve operations (used in GG20 and optional FROST) |
-| **bigint**    | JNA bindings to **libgmp** (constant-time big-integer ops)   |
-| **sodium**    | JNA bindings to **libsodium** (point ops and hashing)        |
+| Module              | Purpose                                                      |
+|---------------------|--------------------------------------------------------------|
+| **frost**           | FROST (Schnorr-based) *t-of-n* signatures                    |
+| **frost-secp256k1** | Default, BIP340 & Taproot FROST schemes for Secp256k1 curve  |
+| **frost-ed25519**   | Ed25519 curve support for FROST protocol                     |
+| **gg20**            | GG20 (ECDSA-based) *t-of-n* signatures with Paillier/MtA     |
+| **ecies**           | Threshold Elliptic Curve Integrated Encryption Scheme        |
+| **ed25519**         | Ed25519 Point Ops                                            |
+| **secp256k1**       | secp256k1 curve operations (used in GG20 and optional FROST) |
+| **bigint**          | JNA bindings to **libgmp** (constant-time big-integer ops)   |
+| **sodium**          | JNA bindings to **libsodium** (point ops and hashing)        |
 
 ---
 

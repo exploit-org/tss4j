@@ -9,4 +9,5 @@ include 'native-build'
 include 'ecies'
 
 
-include 'frost:taproot'
+include 'frost:frost-secp256k1'
+include 'frost:frost-ed25519'
