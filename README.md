@@ -10,6 +10,7 @@ A focused, production-oriented library that implements multi-party ECDSA (GG20),
 | Module        | Purpose                                                      |
 |---------------|--------------------------------------------------------------|
 | **frost**     | FROST (Schnorr-based) *t-of-n* signatures                    |
+| **taproot**   | BIP340 & Taproot FROST schemes for Secp256k1                 |
 | **gg20**      | GG20 (ECDSA-based) *t-of-n* signatures with Paillier/MtA     |
 | **ecies**     | Threshold Elliptic Curve Integrated Encryption Scheme        |
 | **ed25519**   | Ed25519 Point Ops                                            |

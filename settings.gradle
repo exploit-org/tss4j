@@ -8,3 +8,5 @@ include 'secp256k1'
 include 'native-build'
 include 'ecies'
 
+
+include 'frost:taproot'
