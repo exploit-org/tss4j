@@ -177,4 +177,42 @@ public class Secp256k1PointOpsTest {
         assertThrows(IllegalStateException.class,
                 Secp256k1PointOps.INFINITY::getAffineX);
     }
+
+    @Test @DisplayName("createPoint(G.x, G.y) recreates canonical generator")
+    void testCreatePointGeneratorFromCoords() {
+        var G = Secp256k1PointOps.baseMul(BigInt.ONE);
+
+        var rebuilt = CURVE.createPoint(G.getAffineX(), G.getAffineY());
+
+        assertEquals(G, rebuilt);
+        assertTrue(rebuilt.isValid());
+        assertArrayEquals(G.encode(true), rebuilt.encode(true));
+    }
+
+    @Test @DisplayName("createPoint(P.x, P.y) recreates arbitrary point")
+    void testCreatePointRoundtripFromAffine() {
+        var P = Secp256k1PointOps.baseMul(K1);
+
+        var rebuilt = CURVE.createPoint(P.getAffineX(), P.getAffineY());
+
+        assertEquals(P, rebuilt);
+        assertTrue(rebuilt.isValid());
+        assertArrayEquals(P.encode(true), rebuilt.encode(true));
+    }
+
+    @Test @DisplayName("createPoint(x, p - y) recreates negated point (same x, opposite y)")
+    void testCreatePointWithOppositeYGivesNegation() {
+        var P = Secp256k1PointOps.baseMul(K1);
+
+        var x = P.getAffineX();
+        var y = P.getAffineY();
+
+        var p = Secp256k1CurveParams.FIELD_P;
+        var yNeg = p.subtract(y).mod(p);
+
+        var rebuiltNeg = CURVE.createPoint(x, yNeg);
+
+        assertEquals(P.negate(), rebuiltNeg);
+        assertTrue(rebuiltNeg.isValid());
+    }
 }
